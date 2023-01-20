@@ -1,13 +1,17 @@
+use std::env::args;
+
 mod arp;
 mod ethernet;
 mod ip;
 mod icmp;
 mod udp_tcp;
 
+
 fn open_interface(iface: pcap::Device) {
     match pcap::Capture::from_device(iface) {
         Ok(sniffer) => match sniffer.promisc(true).immediate_mode(true).open() {
             Ok(mut sniffer) => {
+
                 while let Ok(packet) = sniffer.next_packet() {
                     let a_sec = std::time::Duration::from_secs(1);
                     std::thread::sleep(a_sec);
@@ -188,14 +192,10 @@ fn parse_udp(packet : & pdu::Ipv4Pdu) {
             println!("        # Checksum: {}", udp.checksum());
             match udp_tcp::UDP_TCP::Port::from(udp.source_port()) {
                 udp_tcp::UDP_TCP::Port::DNS(_) => parse_dns(&udp),
-                udp_tcp::UDP_TCP::Port::DHCP_1(_) => parse_dhcp(&udp),
-                udp_tcp::UDP_TCP::Port::DHCP_2(_) => parse_dhcp(&udp),
                 _ => {},
             }
             match udp_tcp::UDP_TCP::Port::from(udp.destination_port()) {
                 udp_tcp::UDP_TCP::Port::DNS(_) => parse_dns(&udp),
-                udp_tcp::UDP_TCP::Port::DHCP_1(_) => parse_dhcp(&udp),
-                udp_tcp::UDP_TCP::Port::DHCP_2(_) => parse_dhcp(&udp),
                 _ => {},
             }
         }
@@ -235,11 +235,7 @@ fn parse_dns(udp: & pdu::UdpPdu) {
         Err(error) => println!("{}", error), 
     }
 }
-fn parse_dhcp(udp: & pdu::UdpPdu) {
 
-
-
-}
 
 fn show_packet(packet: &pcap::Packet) {
     println!("-------------------------------------------------------------------------------------");
@@ -275,6 +271,17 @@ fn show_packet(packet: &pcap::Packet) {
 }
 
 fn main() {
+
+
+    println!("\n\n");
+    println!("############  Welcome to crab-sniffer ############");
+    println!("Support for:  [ARP] [ICMP] [UDP] [TCP]");
+    let a_sec = std::time::Duration::from_secs(1);
+    std::thread::sleep(a_sec); 
+
+    println!("\n\n");
+
+
     match pcap::Device::lookup() {
         Ok(iface) => match iface {
             Some(iface) => open_interface(iface),
